@@ -63,16 +63,6 @@ The web frontend should **hide the global navigation bar** when either condition
 
 This lets the same membership pages render normally in a browser but fullscreen (no chrome) inside the native app.
 
-## QA checklist (Acceptance Criteria)
-
-- [ ] Open in demo app — **no web header / nav bar** visible
-- [ ] WebView loads the configured URL via the fixed path
-- [ ] Native close button is visible at the top (respects safe area / notch)
-- [ ] Tapping close returns to the landing screen
-- [ ] Works on iOS (TestFlight build)
-- [ ] Works on Android (App Distribution / internal testing build)
-- [ ] Portrait & landscape safe area handled
-
 ## Project structure
 
 ```
