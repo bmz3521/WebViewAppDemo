@@ -63,36 +63,6 @@ The web frontend should **hide the global navigation bar** when either condition
 
 This lets the same membership pages render normally in a browser but fullscreen (no chrome) inside the native app.
 
-## Troubleshooting (`pod install` / React-Core-prebuilt)
-
-### `bad component (expected absolute path component)` และ `Missing required attribute source`
-
-โปรเจกต์อยู่ใต้โฟลเดอร์ **`Demo membership`** ซึ่งมี**ช่องว่างในพาธ** — สคริปต์ prebuild ของ React Native 0.85 สร้าง `file://...` จากพาธ tarball แล้ว Ruby `URI::File` มักจะล้มเมื่อพาธมี space ทำให้ `React-Core-prebuilt` ไม่ได้ `source` ที่ถูกต้อง
-
-**แนวทางที่แนะนำ:** ย้าย repo ไปพาธที่**ไม่มีช่องว่าง** เช่น `Documents/Muze_Inovation_work/Demo-membership/MembershipDemoApp` แล้วรัน `pod install` ใหม่
-
-**ทางเลือกชั่วคราว (build React Native จากซอร์ส ไม่ใช้ prebuilt tarball):**
-
-```bash
-cd ios
-RCT_USE_PREBUILT_RNCORE=0 pod install
-```
-
-(จะช้ากว่าแต่ไม่ต้องแก้ตรรกะ `URI::File` ของ prebuilt)
-
-### `Unexpected XCode version string ''`
-
-ยังไม่ได้ชี้ไปที่ **แอป Xcode เต็ม** — หลังติดตั้ง Xcode ให้รัน:
-
-```bash
-sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
-xcodebuild -version
-```
-
-### คำเตือน Rosetta
-
-ให้เปิดเทอร์มินัลแบบ **arm64** (ไม่รันผ่าน Rosetta) แล้วค่อยรัน `pod install` ตามที่ CLI แจ้ง
-
 ## QA checklist (Acceptance Criteria)
 
 - [ ] Open in demo app — **no web header / nav bar** visible
