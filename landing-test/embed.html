@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Membership – Embed Mode</title>
+  <style>
+    :root {
+      --bg: #FFFFFF;
+      --text: #1A1A1A;
+      --muted: #888;
+      --accent: #0066FF;
+      --success: #34C759;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1C1C1E;
+        --text: #F5F5F5;
+        --muted: #999;
+      }
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      padding: env(safe-area-inset-top, 0) 16px env(safe-area-inset-bottom, 0);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Deliberately NO global nav / header — this is the embed mode mock */
+
+    .content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 24px;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: color-mix(in srgb, var(--success) 15%, transparent);
+      color: var(--success);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .status-badge::before { content: "●"; font-size: 8px; }
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+    .description { color: var(--muted); font-size: 15px; line-height: 1.5; max-width: 340px; }
+    .info-grid {
+      margin-top: 32px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      width: 100%;
+      max-width: 360px;
+    }
+    .info-item {
+      background: color-mix(in srgb, var(--text) 5%, transparent);
+      border-radius: 10px;
+      padding: 14px;
+      text-align: left;
+    }
+    .info-item .label { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+    .info-item .value { font-size: 14px; font-weight: 600; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <div class="status-badge">Embed mode active</div>
+    <h1>Membership Page</h1>
+    <p class="description">
+      This mock page has <strong>no global navigation header</strong>.
+      If you see a native close button above, the WebView integration is working correctly.
+    </p>
+
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="label">Nav visible</div>
+        <div class="value">No</div>
+      </div>
+      <div class="info-item">
+        <div class="label">Mode</div>
+        <div class="value" id="mode">embed</div>
+      </div>
+      <div class="info-item">
+        <div class="label">Query</div>
+        <div class="value" id="query">—</div>
+      </div>
+      <div class="info-item">
+        <div class="label">User Agent</div>
+        <div class="value" id="ua">—</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('query').textContent = location.search || '(none)';
+    const ua = navigator.userAgent;
+    document.getElementById('ua').textContent =
+      ua.length > 40 ? ua.substring(0, 37) + '...' : ua;
+  </script>
+</body>
+</html>
