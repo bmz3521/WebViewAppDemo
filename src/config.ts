@@ -1,13 +1,25 @@
-/** Empty page via HTML — avoids iOS WKWebView crashes with `uri: about:blank`. */
-const BLANK_HTML =
-  '<!DOCTYPE html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/></head><body></body></html>';
+/**
+ * App-wide defaults for the membership shell simulator.
+ * Feature UI & logic live under `src/membership-shell/`; theme tokens under `src/theme/`.
+ */
 
-/** Shown in the URL field placeholder until the user types and taps «ไป». */
-export const MEMBERSHIP_URL_PLACEHOLDER = 'http://localhost:3000/login';
+/** Default portal URL for QA — editable on the landing screen. */
+export const DEFAULT_MEMBERSHIP_WEBVIEW_URL =
+  'https://membership.trueid-preprod.net/th/package/';
 
-export function getMembershipWebViewSource(): {
-  html: string;
-  baseUrl: string;
-} {
-  return {html: BLANK_HTML, baseUrl: 'http://localhost:3000/'};
-}
+/** Example base for OAuth session handoff (append `token`, `redirect_uri`, etc. as query rows). */
+export const DEFAULT_OAUTH_SESSIONS_BASE_URL =
+  'https://membership.trueid-preprod.net/api/oauth/sessions';
+
+/** Sent as `x-appname` unless overridden on the landing screen. */
+export const DEFAULT_SHELL_APP_NAME = 'trueid';
+
+/**
+ * HTTP header names — ฝั่งเว็บอ่านค่าเหล่านี้เพื่อตั้งโหมด in-app / mobile shell
+ * (ค่าไม่ sensitive ตามที่ตกลงกับทีม web).
+ */
+export const SHELL_HEADER_PLATFORM = 'x-platform';
+export const SHELL_HEADER_APP_NAME = 'x-appname';
+
+/** Legacy placeholder — same as default portal URL. */
+export const MEMBERSHIP_URL_PLACEHOLDER = DEFAULT_MEMBERSHIP_WEBVIEW_URL;

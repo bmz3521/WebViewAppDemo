@@ -1,22 +1,33 @@
 import React, {useState} from 'react';
 import {StatusBar, useColorScheme} from 'react-native';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
-import LandingScreen from './src/screens/LandingScreen';
-import MembershipWebScreen from './src/screens/MembershipWebScreen';
+import {
+  LandingScreen,
+  MembershipWebScreen,
+  type WebViewShellLaunch,
+} from './src/membership-shell';
 
-type Screen = 'landing' | 'webview';
+type AppRoute =
+  | {name: 'landing'}
+  | {name: 'webview'; launch: WebViewShellLaunch};
 
 function App() {
   const isDark = useColorScheme() === 'dark';
-  const [screen, setScreen] = useState<Screen>('landing');
+  const [route, setRoute] = useState<AppRoute>({name: 'landing'});
 
   return (
     <SafeAreaProvider>
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
-      {screen === 'landing' ? (
-        <LandingScreen onOpenWebView={() => setScreen('webview')} />
+      {route.name === 'landing' ? (
+        <LandingScreen
+          onOpenWebView={launch => setRoute({name: 'webview', launch})}
+        />
       ) : (
-        <MembershipWebScreen onClose={() => setScreen('landing')} />
+        <MembershipWebScreen
+          initialUri={route.launch.uri}
+          shellHeaders={route.launch.headers}
+          onClose={() => setRoute({name: 'landing'})}
+        />
       )}
     </SafeAreaProvider>
   );
