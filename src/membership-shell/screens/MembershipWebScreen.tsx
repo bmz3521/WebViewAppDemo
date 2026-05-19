@@ -20,16 +20,18 @@ export type MembershipWebScreenProps = {
   initialUri: string;
   shellHeaders: Record<string, string>;
   onClose: () => void;
+  onLastUriLoaded?: (uri: string) => void;
 };
 
 export function MembershipWebScreen({
   initialUri,
   shellHeaders,
   onClose,
+  onLastUriLoaded,
 }: MembershipWebScreenProps) {
   const palette = useThemePalette();
   const insets = useSafeAreaInsets();
-  const wv = useShellWebView(initialUri, shellHeaders);
+  const wv = useShellWebView(initialUri, shellHeaders, onLastUriLoaded);
 
   return (
     <View style={[styles.flex, {backgroundColor: palette.background}]}>
@@ -44,15 +46,71 @@ export function MembershipWebScreen({
             backgroundColor: palette.surface,
           },
         ]}>
-        <Text style={[styles.chromeTitle, {color: palette.textMuted}]}>
-          {webViewCopy.screenTitle}
-        </Text>
+        <View style={styles.topBar}>
+          <Text
+            style={[styles.chromeTitle, {color: palette.textMuted}]}
+            numberOfLines={1}>
+            {webViewCopy.screenTitle}
+          </Text>
+          <TouchableOpacity
+            onPress={onClose}
+            style={[
+              styles.closeBtn,
+              {
+                backgroundColor: palette.surfaceElevated,
+                borderColor: palette.border,
+              },
+            ]}
+            hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
+            accessibilityRole="button"
+            accessibilityLabel="Close WebView">
+            <Text style={[styles.closeBtnText, {color: palette.textSecondary}]}>
+              ✕
+            </Text>
+          </TouchableOpacity>
+        </View>
         <ShellHeaderChips palette={palette} headers={shellHeaders} />
         <Text style={[styles.hint, {color: palette.textMuted}]}>
           {webViewCopy.hintReload}
         </Text>
 
         <View style={styles.urlRow}>
+          <TouchableOpacity
+            onPress={wv.goBack}
+            disabled={!wv.canGoBack}
+            style={[
+              styles.navBtn,
+              {
+                backgroundColor: palette.surfaceElevated,
+                borderColor: palette.border,
+                opacity: wv.canGoBack ? 1 : 0.38,
+              },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={webViewCopy.historyBack}
+            accessibilityState={{disabled: !wv.canGoBack}}>
+            <Text style={[styles.navBtnIcon, {color: palette.textPrimary}]}>
+              ‹
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={wv.goForward}
+            disabled={!wv.canGoForward}
+            style={[
+              styles.navBtn,
+              {
+                backgroundColor: palette.surfaceElevated,
+                borderColor: palette.border,
+                opacity: wv.canGoForward ? 1 : 0.38,
+              },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={webViewCopy.historyForward}
+            accessibilityState={{disabled: !wv.canGoForward}}>
+            <Text style={[styles.navBtnIcon, {color: palette.textPrimary}]}>
+              ›
+            </Text>
+          </TouchableOpacity>
           <TextInput
             style={[
               styles.urlInput,
@@ -81,22 +139,6 @@ export function MembershipWebScreen({
             accessibilityLabel="Load URL">
             <Text style={[styles.goBtnText, {color: palette.onAccent}]}>ไป</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            onPress={onClose}
-            style={[
-              styles.closeBtn,
-              {
-                backgroundColor: palette.surfaceElevated,
-                borderColor: palette.border,
-              },
-            ]}
-            hitSlop={{top: 8, bottom: 8, left: 8, right: 8}}
-            accessibilityRole="button"
-            accessibilityLabel="Close WebView">
-            <Text style={[styles.closeBtnText, {color: palette.textSecondary}]}>
-              ✕
-            </Text>
-          </TouchableOpacity>
         </View>
       </View>
 
@@ -116,14 +158,12 @@ export function MembershipWebScreen({
           </View>
         ) : (
           <WebView
+            key={`shell-wv-${wv.loadGeneration}`}
             ref={wv.webViewRef}
             source={wv.source}
             style={[styles.webview, {backgroundColor: palette.surface}]}
             onNavigationStateChange={wv.handleNavigationStateChange}
             onLoadProgress={wv.handleLoadProgress}
-            {...(Platform.OS === 'ios'
-              ? {onLoadStart: wv.onLoadStart}
-              : {})}
             onLoadEnd={wv.onLoadEnd}
             onError={wv.onLoadError}
             onHttpError={wv.onLoadError}
@@ -162,12 +202,19 @@ const styles = StyleSheet.create({
   chrome: {
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
   chromeTitle: {
+    flex: 1,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 1,
     textTransform: 'uppercase',
-    marginBottom: spacing.sm,
   },
   hint: {
     fontSize: 11,
@@ -177,7 +224,21 @@ const styles = StyleSheet.create({
   urlRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: spacing.xs + 2,
+  },
+  navBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: radius.sm,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navBtnIcon: {
+    fontSize: 22,
+    fontWeight: '400',
+    lineHeight: 24,
+    marginTop: -1,
   },
   urlInput: {
     flex: 1,

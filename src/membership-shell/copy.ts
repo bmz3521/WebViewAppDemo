@@ -15,7 +15,10 @@ export const landingCopy = {
   labelQueryKey: 'ชื่อพารามิเตอร์',
   labelQueryValue: 'ค่า',
   addQueryParam: 'เพิ่มพารามิเตอร์',
-  removeQueryParam: 'ลบแถว',
+  removeQueryParam: 'ลบ',
+  clearAllParams: 'ล้างพารามิเตอร์ทั้งหมด',
+  clearBaseUrl: 'เคลียร์ URL ฐาน',
+  restoreLastUrl: 'ใช้ URL ล่าสุด',
   composedUrlPreview: 'URL รวมแล้ว',
   composedUrlPreviewHint: 'อัปเดตทันทีขณะกรอกพารามิเตอร์',
   hintQueryParams:
@@ -28,6 +31,8 @@ export const landingCopy = {
 export const webViewCopy = {
   screenTitle: 'WebView',
   hintReload: 'ไป = แนบ headers ใหม่',
+  historyBack: 'ย้อนกลับ',
+  historyForward: 'ไปข้างหน้า',
   loadFailedTitle: 'โหลดไม่สำเร็จ',
   retry: 'ลองใหม่',
 } as const;

@@ -8,6 +8,12 @@
  */
 
 export type {WebViewShellLaunch} from './types';
+export type {ShellSessionCache} from './shellSessionCache';
+export {
+  readShellSessionCache,
+  writeShellSessionCache,
+  clearShellSessionCache,
+} from './shellSessionCache';
 export {
   buildShellRequestHeaders,
   nativeDetectedShellPlatform,

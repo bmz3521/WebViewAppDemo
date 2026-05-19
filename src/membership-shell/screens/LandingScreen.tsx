@@ -1,4 +1,4 @@
-import React, {useMemo, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -30,6 +30,7 @@ import {ShellHeadersPreview} from '../components/ShellHeadersPreview';
 import {ShellPrimaryButton} from '../components/ShellPrimaryButton';
 import {ShellSection} from '../components/ShellSection';
 import {ShellTextField} from '../components/ShellTextField';
+import type {ShellSessionCache} from '../shellSessionCache';
 import {
   buildShellRequestHeaders,
   nativeDetectedShellPlatform,
@@ -37,20 +38,69 @@ import {
 import type {WebViewShellLaunch} from '../types';
 
 export type LandingScreenProps = {
+  sessionCache: ShellSessionCache | null;
   onOpenWebView: (launch: WebViewShellLaunch) => void;
 };
 
-export function LandingScreen({onOpenWebView}: LandingScreenProps) {
+function initialFormFromCache(
+  cache: ShellSessionCache | null,
+  detectedPlatform: string,
+): {
+  baseUrl: string;
+  paramRows: QueryParamRow[];
+  platform: string;
+  appName: string;
+} {
+  if (!cache) {
+    return {
+      baseUrl: DEFAULT_MEMBERSHIP_WEBVIEW_URL,
+      paramRows: [],
+      platform: detectedPlatform,
+      appName: DEFAULT_SHELL_APP_NAME,
+    };
+  }
+  return {
+    baseUrl: cache.baseUrl || DEFAULT_MEMBERSHIP_WEBVIEW_URL,
+    paramRows: cache.paramRows.map((r, i) => ({
+      ...r,
+      id: r.id || `cached-${i}`,
+    })),
+    platform: cache.platform || detectedPlatform,
+    appName: cache.appName || DEFAULT_SHELL_APP_NAME,
+  };
+}
+
+export function LandingScreen({sessionCache, onOpenWebView}: LandingScreenProps) {
   const insets = useSafeAreaInsets();
   const palette = useThemePalette();
   const detectedPlatform = useMemo(() => nativeDetectedShellPlatform(), []);
   const rowIdRef = useRef(0);
   const genRowId = () => `q-${++rowIdRef.current}`;
 
-  const [baseUrlDraft, setBaseUrlDraft] = useState(DEFAULT_MEMBERSHIP_WEBVIEW_URL);
-  const [paramRows, setParamRows] = useState<QueryParamRow[]>([]);
-  const [platformDraft, setPlatformDraft] = useState(detectedPlatform);
-  const [appNameDraft, setAppNameDraft] = useState(DEFAULT_SHELL_APP_NAME);
+  const initial = useMemo(
+    () => initialFormFromCache(sessionCache, detectedPlatform),
+    [sessionCache, detectedPlatform],
+  );
+
+  const [baseUrlDraft, setBaseUrlDraft] = useState(initial.baseUrl);
+  const [paramRows, setParamRows] = useState<QueryParamRow[]>(initial.paramRows);
+  const [platformDraft, setPlatformDraft] = useState(initial.platform);
+  const [appNameDraft, setAppNameDraft] = useState(initial.appName);
+
+  useEffect(() => {
+    if (!sessionCache) {
+      return;
+    }
+    setBaseUrlDraft(sessionCache.baseUrl || DEFAULT_MEMBERSHIP_WEBVIEW_URL);
+    setParamRows(
+      sessionCache.paramRows.map((r, i) => ({
+        ...r,
+        id: r.id || `cached-${i}`,
+      })),
+    );
+    setPlatformDraft(sessionCache.platform || detectedPlatform);
+    setAppNameDraft(sessionCache.appName || DEFAULT_SHELL_APP_NAME);
+  }, [sessionCache, detectedPlatform]);
 
   const resolvedHeaders = useMemo(
     () => buildShellRequestHeaders(platformDraft, appNameDraft),
@@ -70,12 +120,37 @@ export function LandingScreen({onOpenWebView}: LandingScreenProps) {
     [baseUrlDraft, paramRows],
   );
 
+  const lastLoadedUri = sessionCache?.lastLoadedUri?.trim() ?? '';
+
   const addParamRow = () => {
     setParamRows(prev => [...prev, {id: genRowId(), key: '', value: ''}]);
   };
 
   const removeParamRow = (id: string) => {
     setParamRows(prev => prev.filter(r => r.id !== id));
+  };
+
+  const clearAllParams = () => {
+    setParamRows([]);
+  };
+
+  const clearBaseUrl = () => {
+    setBaseUrlDraft('');
+  };
+
+  const restoreFromCache = () => {
+    if (!sessionCache) {
+      return;
+    }
+    setBaseUrlDraft(sessionCache.baseUrl || DEFAULT_MEMBERSHIP_WEBVIEW_URL);
+    setParamRows(
+      sessionCache.paramRows.map((r, i) => ({
+        ...r,
+        id: r.id || `restore-${i}`,
+      })),
+    );
+    setPlatformDraft(sessionCache.platform || detectedPlatform);
+    setAppNameDraft(sessionCache.appName || DEFAULT_SHELL_APP_NAME);
   };
 
   const updateParamRow = (
@@ -163,21 +238,45 @@ export function LandingScreen({onOpenWebView}: LandingScreenProps) {
             autoCorrect={false}
             accessibilityLabel="Shell app name header"
           />
-          <ShellTextField
-            palette={palette}
-            label={landingCopy.labelUrlBase}
-            value={baseUrlDraft}
-            onChangeText={setBaseUrlDraft}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-            returnKeyType="go"
-            blurOnSubmit={false}
-            onSubmitEditing={openWebView}
-            placeholder={DEFAULT_MEMBERSHIP_WEBVIEW_URL}
-            style={styles.urlMono}
-            accessibilityLabel="Portal base URL"
-          />
+          <View style={styles.fieldActions}>
+            <ShellTextField
+              palette={palette}
+              label={landingCopy.labelUrlBase}
+              value={baseUrlDraft}
+              onChangeText={setBaseUrlDraft}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              returnKeyType="go"
+              blurOnSubmit={false}
+              onSubmitEditing={openWebView}
+              placeholder={DEFAULT_MEMBERSHIP_WEBVIEW_URL}
+              style={[styles.urlMono, styles.urlFieldFlex]}
+              accessibilityLabel="Portal base URL"
+            />
+          </View>
+          <View style={styles.inlineActions}>
+            <TouchableOpacity
+              onPress={clearBaseUrl}
+              style={[styles.chipBtn, {borderColor: palette.border}]}
+              accessibilityRole="button"
+              accessibilityLabel={landingCopy.clearBaseUrl}>
+              <Text style={[styles.chipBtnText, {color: palette.textSecondary}]}>
+                {landingCopy.clearBaseUrl}
+              </Text>
+            </TouchableOpacity>
+            {lastLoadedUri ? (
+              <TouchableOpacity
+                onPress={restoreFromCache}
+                style={[styles.chipBtn, {borderColor: palette.accent}]}
+                accessibilityRole="button"
+                accessibilityLabel={landingCopy.restoreLastUrl}>
+                <Text style={[styles.chipBtnText, {color: palette.accent}]}>
+                  {landingCopy.restoreLastUrl}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
           <TouchableOpacity
             onPress={() => setBaseUrlDraft(DEFAULT_OAUTH_SESSIONS_BASE_URL)}
             style={styles.shortcutBtn}
@@ -190,16 +289,40 @@ export function LandingScreen({onOpenWebView}: LandingScreenProps) {
         </ShellSection>
 
         <ShellSection palette={palette} title={landingCopy.sectionQueryParams}>
-          <Text style={[styles.hint, {color: palette.textMuted}]}>
-            {landingCopy.hintQueryParams}
-          </Text>
+          <View style={styles.sectionToolbar}>
+            <Text style={[styles.hint, styles.hintFlex, {color: palette.textMuted}]}>
+              {landingCopy.hintQueryParams}
+            </Text>
+            {paramRows.length > 0 ? (
+              <TouchableOpacity
+                onPress={clearAllParams}
+                style={[styles.chipBtn, {borderColor: palette.border}]}
+                accessibilityRole="button"
+                accessibilityLabel={landingCopy.clearAllParams}>
+                <Text style={[styles.chipBtnText, {color: palette.textSecondary}]}>
+                  {landingCopy.clearAllParams}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
           {paramRows.map((row, index) => (
             <View
               key={row.id}
               style={[styles.paramBlock, {borderBottomColor: palette.border}]}>
-              <Text style={[styles.paramIndex, {color: palette.textMuted}]}>
-                #{index + 1}
-              </Text>
+              <View style={styles.paramHeader}>
+                <Text style={[styles.paramIndex, {color: palette.textMuted}]}>
+                  #{index + 1}
+                </Text>
+                <TouchableOpacity
+                  onPress={() => removeParamRow(row.id)}
+                  style={[styles.deleteChip, {borderColor: palette.borderStrong}]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${landingCopy.removeQueryParam} ${index + 1}`}>
+                  <Text style={[styles.deleteChipText, {color: palette.textSecondary}]}>
+                    {landingCopy.removeQueryParam}
+                  </Text>
+                </TouchableOpacity>
+              </View>
               <ShellTextField
                 palette={palette}
                 label={landingCopy.labelQueryKey}
@@ -225,15 +348,6 @@ export function LandingScreen({onOpenWebView}: LandingScreenProps) {
                 style={styles.urlMono}
                 accessibilityLabel={`Query parameter value row ${index + 1}`}
               />
-              <TouchableOpacity
-                onPress={() => removeParamRow(row.id)}
-                style={styles.removeRowBtn}
-                accessibilityRole="button"
-                accessibilityLabel={`${landingCopy.removeQueryParam} ${index + 1}`}>
-                <Text style={[styles.removeRowLabel, {color: palette.textSecondary}]}>
-                  {landingCopy.removeQueryParam}
-                </Text>
-              </TouchableOpacity>
             </View>
           ))}
           <TouchableOpacity
@@ -310,12 +424,35 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontFamily: Platform.select({ios: 'Menlo', default: 'monospace'}),
   },
+  fieldActions: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
+  urlFieldFlex: {
+    flex: 1,
+  },
   urlMono: {
     fontFamily: Platform.select({ios: 'Menlo', default: 'monospace'}),
     fontSize: 13,
   },
-  shortcutBtn: {
+  inlineActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
     marginTop: -spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  chipBtn: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 8,
+    paddingHorizontal: spacing.sm + 4,
+    paddingVertical: spacing.xs + 2,
+  },
+  chipBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  shortcutBtn: {
     marginBottom: spacing.sm,
     alignSelf: 'flex-start',
   },
@@ -323,28 +460,43 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
+  sectionToolbar: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
   hint: {
     fontSize: 12,
     lineHeight: 17,
-    marginBottom: spacing.md,
+  },
+  hintFlex: {
+    flex: 1,
   },
   paramBlock: {
     marginBottom: spacing.md,
     paddingBottom: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
+  paramHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
+  },
   paramIndex: {
     fontSize: 11,
     fontWeight: '700',
-    marginBottom: spacing.xs,
   },
-  removeRowBtn: {
-    alignSelf: 'flex-start',
-    paddingVertical: spacing.xs,
+  deleteChip: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 6,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
   },
-  removeRowLabel: {
-    fontSize: 13,
-    fontWeight: '600',
+  deleteChipText: {
+    fontSize: 12,
+    fontWeight: '700',
   },
   addRowBtn: {
     borderWidth: StyleSheet.hairlineWidth,

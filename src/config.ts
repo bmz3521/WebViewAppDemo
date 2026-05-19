@@ -5,7 +5,7 @@
 
 /** Default portal URL for QA — editable on the landing screen. */
 export const DEFAULT_MEMBERSHIP_WEBVIEW_URL =
-  'https://membership.trueid-preprod.net/th/package/';
+  'http://localhost:3000/api/oauth/sessions?';
 
 /** Example base for OAuth session handoff (append `token`, `redirect_uri`, etc. as query rows). */
 export const DEFAULT_OAUTH_SESSIONS_BASE_URL =
