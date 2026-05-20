@@ -30,7 +30,6 @@ export const landingCopy = {
 
 export const webViewCopy = {
   screenTitle: 'WebView',
-  hintReload: 'ไป = แนบ headers ใหม่',
   historyBack: 'ย้อนกลับ',
   historyForward: 'ไปข้างหน้า',
   loadFailedTitle: 'โหลดไม่สำเร็จ',

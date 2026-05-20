@@ -70,9 +70,6 @@ export function MembershipWebScreen({
           </TouchableOpacity>
         </View>
         <ShellHeaderChips palette={palette} headers={shellHeaders} />
-        <Text style={[styles.hint, {color: palette.textMuted}]}>
-          {webViewCopy.hintReload}
-        </Text>
 
         <View style={styles.urlRow}>
           <TouchableOpacity
@@ -215,11 +212,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 1,
     textTransform: 'uppercase',
-  },
-  hint: {
-    fontSize: 11,
-    lineHeight: 14,
-    marginBottom: spacing.sm + 2,
   },
   urlRow: {
     flexDirection: 'row',
